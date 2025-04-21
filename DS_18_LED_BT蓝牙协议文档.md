@@ -122,4 +122,4 @@
 
 ---
 ---
-* [点击查看第三方文档原文件](https://github.com/tucici/qzkj/blob/master/PipedreamLighting通讯协议V3.0.xls)
+* [点击查看第三方文档原文件](https://docs.google.com/viewer?url=https://raw.githubusercontent.com/tucici/qzkj/blob/master/EZ_IC_LED蓝牙协议文档.docx&embedded=true)
