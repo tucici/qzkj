@@ -237,9 +237,18 @@
    ``` 
 ### 保存到设备
 * `🔥🔥🔥APP发指令时加AA,55即可，保存参数到设备指令，APP上调好的参数，可以通过次指令保存到MCU的相应位置` 
-   ```javascript
-   0xFF 0xCC 0x00-(D1~D5)
-   ```    
+* `🔥🔥🔥总共6档，默认D0就是即时保存，D1~D5,保存到指定MCU上`
+  ```javascript
+  0xFF 0xCC 0x00-(D1~D5)
+  ```
+ * 指令: 0xFF, 0xCC
+ * 例子：保存当前的数据，到第一个MCU
+    ```javascript
+    FFCC+D1
+    ```
+### 获取当前设备是使用哪个MCU的数据(设备当前数据的位置)
+* `🔥🔥🔥0就是即时保存，1-5就是MCU1-MCU5` 
+ * 指令: 0x46, 0x13 + (位置)     
 ### 选择RCA(analog) | Toslink | DB(digital bluetooth) 
 * 指令：0xAA，0x82
 * 选择RAC：0xC1
