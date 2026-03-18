@@ -7,8 +7,27 @@
  * 无定义
 ## 读：
  * 无定义
-## 数据格式:
- * 帧头 FE(1bytes)+指令(1bytes)+数据长度(1bytes)+数据(Nbytes)+校验(1bytes)+帧尾DD(1bytes)   
+## 请求数据格式:
+```javascript
+ * 帧头`HEAD`: 0xFA (1bytes)
+ * 序号`SEQ`: 0x00~0xFF (1bytes)
+ * 命令`CMD`: (1bytes)
+ * 数据长度`LEN`: (1bytes)
+ * 数据`DATA`: (N bytes)
+ * 校验`CRC`: (1bytes)
+ * 桢尾`END`:0xDD (1bytes)
+```
+## 回答数据格式:
+```javascript
+ * 帧头`HEAD`: 0xFB (1bytes)
+ * 序号`SEQ`: 0x00~0xFF (1bytes)
+ * 命令`CMD`: 跟请求数据一样(1bytes)
+ * 状态`status`: (1bytes) 0x00 = 成功  ｜  0x01 = 参数错误  ｜  0x02 = 设备不支持  ｜  0x03 =  其他带扩展状态
+ * 数据长度`LEN`: (1bytes)
+ * 数据`DATA`: (N bytes)
+ * 校验`CRC`: (1bytes)
+ * 桢尾`END`:0xDD (1bytes)
+```
 ## 校验方式：
 * `🔥🔥🔥指令+数据长度+数据，按字节进行按位异或运算，结果取低8位` 
  * xor = 指令 ^ 数据长度 ^ 数据
@@ -21,14 +40,18 @@
  * 指令：0xAA
  * 例子：`(黄色:100，亮度:100，闪烁：true)`
    ```javascript
-   FE+AA+03+64+64+01+A8+DD
+   FA+00+AA+03+64+64+01+A8+DD
    ```
 ### 硬件版本号：
  * 指令：0xAB 
    ```javascript
-   FE+AB+01+00+AA+DD
+   FA+00+AB+00+AB+DD
    ```
-
+### 硬件返回版本号：
+ * 版本号：1.2.1
+   ```javascript
+   FB+00+AB+00+0x03+0x010201+02+DD
+   ```
 
 ----
 ----
