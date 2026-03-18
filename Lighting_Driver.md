@@ -1,13 +1,23 @@
 > # Lighting Driver 蓝牙协议
+
 ## 说明：
- * Lighting Driver项目的蓝牙协议
+
+- Lighting Driver项目的蓝牙协议
+
 ## 蓝牙广播名称：
- * Lighting
+
+- Lighting
+
 ## 写：
- * 无定义
+
+- 无定义
+
 ## 读：
- * 无定义
+
+- 无定义
+
 ## 请求数据格式:
+
 ```javascript
  * 帧头`HEAD`: 0xFA (1bytes)
  * 序号`SEQ`: 0x00~0xFF (1bytes)
@@ -17,7 +27,9 @@
  * 校验`CRC`: (1bytes)
  * 桢尾`END`:0xDD (1bytes)
 ```
+
 ## 回答数据格式:
+
 ```javascript
  * 帧头`HEAD`: 0xFB (1bytes)
  * 序号`SEQ`: 0x00~0xFF (1bytes)
@@ -28,74 +40,104 @@
  * 校验`CRC`: (1bytes)
  * 桢尾`END`:0xDD (1bytes)
 ```
-## 校验方式：
-* `🔥🔥🔥指令+数据长度+数据，按字节进行按位异或运算，结果取低8位` 
- * xor = 指令 ^ 数据长度 ^ 数据
- * crc = xor & 0xFF
---- 
----  
->>## 功能
-### 设置灯的颜色和亮度和闪烁：
-* `🔥🔥🔥白色和黄色总值是100，黄色100，白色就是0)`
- * 指令：0xAA
- * 例子：`(黄色:100，亮度:100，闪烁：true)`
-   ```javascript
-   FA+00+AA+03+64+64+01+A8+DD
-   ```
-### 硬件版本号：
- * 指令：0xAB 
-   ```javascript
-   FA+00+AB+00+AB+DD
-   ```
-### 硬件返回版本号：
- * 版本号：1.2.1
-   ```javascript
-   FB+00+AB+00+0x03+0x010201+02+DD
-   ```
 
-----
-----
-----
-----
-> # 客户旧产品Drive Light 蓝牙协议
-## 说明：
- * 旧产品Drive Light项目的蓝牙协议
-## 蓝牙广播名称：
- * QStar
-## Services：
- * FFD5 : 
-   * Characteristic : FFD9
-     * Properties: 
-       ```javascript
-       Write
-       Write without Response
-       ```
- * FFD0 : 
-   * Characteristic : FFD4
-     * Properties: 
-       ```javascript
-       Notify
-       ```       
-## 数据格式:
- * 指令(1bytes)+黄(1bytes)+白(1bytes)+亮(1bytes)+闪(1bytes)++帧尾0x00,0xAA(2bytes)   
---- 
---- 
->>## 功能
+## 校验方式：
+
+- `🔥🔥🔥指令+数据长度+数据，按字节进行按位异或运算，结果取低8位`
+- xor = 指令 ^ 数据长度 ^ 数据
+- crc = xor & 0xFF
+
+---
+
+---
+
+> > ## 功能
+
 ### 设置灯的颜色和亮度和闪烁：
-* `🔥🔥🔥白色和黄色总值是100，黄色100，白色就是0)`
-*  `闪烁模式 : 分别是01,02,03` 
-*  `非闪烁模式 : 00`
-*  `闪烁模式是，设置的黄｜白｜亮参数无效，灯光设备有自己内定的值`
- * 指令：0x56
- * 例子：`(黄色:100，亮度:100，非闪烁模式：0x00)`
-   ```javascript
-   56+64+00+64+00+00+AA
-   ```
+
+- `🔥🔥🔥白色和黄色总值是100，黄色100，白色就是0)`
+- 指令：0xAA
+- 例子：`(黄色:100，亮度:100，闪烁：true)`
+  ```javascript
+  FA + 00 + AA + 03 + 64 + 64 + 01 + A8 + DD;
+  ```
+
+### 硬件版本号：
+
+- 指令：0xAB
+  ```javascript
+  FA + 00 + AB + 00 + AB + DD;
+  ```
+
+### 硬件返回版本号：
+
+- 版本号：1.2.1
+  ```javascript
+  FB + 00 + AB + 00 + 0x03 + 0x010201 + 02 + DD;
+  ```
+
+---
+
+---
+
+---
+
+---
+
+> # 客户旧产品Drive Light 蓝牙协议
+
+## 说明：
+
+- 旧产品Drive Light项目的蓝牙协议
+
+## 蓝牙广播名称：
+
+- QStar
+
+## Services：
+
+- FFD5 :
+  - Characteristic : FFD9
+    - Properties:
+      ```javascript
+      Write
+      Write without Response
+      ```
+- FFD0 :
+  - Characteristic : FFD4
+    - Properties:
+      ```javascript
+      Notify;
+      ```
+
+## 数据格式:
+
+- 指令(1bytes)+黄(1bytes)+白(1bytes)+亮(1bytes)+闪(1bytes)++帧尾0x00,0xAA(2bytes)
+
+---
+
+---
+
+> > ## 功能
+
+### 设置灯的颜色和亮度和闪烁：
+
+- `🔥🔥🔥白色和黄色总值是100，黄色100，白色就是0)`
+- `闪烁模式 : 分别是01,02,03`
+- `非闪烁模式 : 00`
+- `闪烁模式是，设置的黄｜白｜亮参数无效，灯光设备有自己内定的值`
+- 指令：0x56
+- 例子：`(黄色:100，亮度:100，非闪烁模式：0x00)`
+  ```javascript
+  56 + 64 + 00 + 64 + 00 + 00 + AA;
+  ```
+
 ### 全部功能协议示例：
+
 ```javascript
                                         模式                          头   黄   白  亮   闪  (帧  尾)
  黄 0        白 100         亮 50        晴天                        = 0x56  00  64  32  00  00  aa
- 黄 67       白 33          亮 50        雨天                        = 0x56  43  21  32  00  00  aa 
+ 黄 67       白 33          亮 50        雨天                        = 0x56  43  21  32  00  00  aa
  黄 100      白 0           亮 50        雾天                        = 0x56  64  00  32  00  00  aa
  黄 82       白 18          亮 50        雪天                        = 0x56  52  12  32  00  00  aa
 
