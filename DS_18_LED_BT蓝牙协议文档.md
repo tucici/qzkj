@@ -3,6 +3,7 @@
  * 适用于DS18_LED_BTC，Pipedream Lighting项目
 ## 蓝牙广播名称：
  * `QHM-xxxx`，`xxxx` 代表 `2` 个字节的物理地址
+ * `Triones-xxx`,`xxxx` 代表 `2` 个字节的物理地址 `(CC2540型)`
 ## 写: 16位
  * 服务：FFD5
  * 特征：FFD9
@@ -30,6 +31,13 @@
    DD+23+33
    DD+24+33
    ```
+> `❗️❗️❗️Triones设备指令如下`：
+ * 指令：0xCC
+ * 例子：
+   ```javascript
+   CC+23+33
+   CC+24+33
+   ```
 ### 显示固定的单色
  * 指令：0xB6
  * red：0x00~0xFF
@@ -41,6 +49,12 @@
  * 例子：`红色(EB3223)`
    ```javascript
    B6+EB+32+23+00+F0+AA
+   ```
+> `❗️❗️❗️Triones设备指令如下`：
+ * 指令：0x56
+ * 例子：`红色(EB3223)`
+   ```javascript
+   56+EB+32+23+00+F0+AA
    ```
 ### 音乐模式下，颜色数据
  * 指令：0x78
@@ -86,6 +100,12 @@
    ```javascript
    2A+38+01+44
    ```
+> `❗️❗️❗️Triones设备指令如下`：
+ * 指令：0xBB
+ * 例子：`七彩跳变，跳变速度：1`
+   ```javascript
+   BB+38+01+44
+   ```   
 ### 设置外麦模式
  * 指令：0x01
  * 外麦开启状态：0xF0 = 开启，0x0F = 关闭 
@@ -94,7 +114,8 @@
  * 例子：
    ```javascript
    01+F0+00+64+00+18
-   ```   
+   ``` 
+> `❗️❗️❗️Triones设备没有设置外麦的指令`
 ### 查询设备数据
  * 指令：0x7F
  * 命令尾：0x77
@@ -123,3 +144,4 @@
 ---
 ---
 * [点击查看文档原文件](https://docs.google.com/viewer?url=https://raw.githubusercontent.com/tucici/qzkj/master/PipedreamLighting通讯协议V3.xls&embedded=true)
+* [点击查看Troines(CC2540)文档原文件](https://docs.google.com/viewer?url=https://raw.githubusercontent.com/tucici/qzkj/master/PipedreamLighting(troines即CC2540型)通讯协议.xls&embedded=true)
