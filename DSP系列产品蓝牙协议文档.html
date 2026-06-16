@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>DSP系列产品蓝牙协议文档.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> or <div class="page"></div> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<blockquote>
+<h1 id="dsp系列产品蓝牙协议">DSP系列产品蓝牙协议</h1>
+</blockquote>
+<h2 id="说明">说明：</h2>
+<ul>
+<li>适用于秦智DSP系列产品</li>
+</ul>
+<h2 id="蓝牙广播名称">蓝牙广播名称：</h2>
+<ul>
+<li>名字包含<code>DSP</code>，不同产品不同名字</li>
+</ul>
+<h2 id="写-16位">写: 16位</h2>
+<ul>
+<li>服务：FAA0</li>
+<li>特征：FAA1</li>
+</ul>
+<h2 id="读16位">读：16位</h2>
+<ul>
+<li>服务：FAA0</li>
+<li>特征：FAA1</li>
+</ul>
+<h2 id="数据格式">数据格式：</h2>
+<p><code>🔥🔥🔥有的固件版本不带帧头，不带帧头的直接拼接指令</code></p>
+<ul>
+<li>固定长度: 14 byte，不足后面补0</li>
+<li>帧头: AA55 (2 bytes)</li>
+<li>指令：?? (1bytes)</li>
+<li>数据：?? (n bytes)</li>
+</ul>
+<h2 id="校验方式">校验方式：</h2>
+<ul>
+<li>无</li>
+</ul>
+<hr>
+<hr>
+<blockquote>
+<blockquote>
+<h2 id="功能">功能</h2>
+</blockquote>
+</blockquote>
+<h3 id="通道频率q值增益">通道频率,Q值,增益</h3>
+<ul>
+<li>指令：</li>
+<li>单通道：0xAA</li>
+<li>联调：0xAB</li>
+<li>通道：0xC1~0xC8</li>
+<li>频点下标：0x00~0x0E</li>
+<li>频率：0x0014~0x4E20</li>
+<li>Q值：0x0005~0x07D0  (无负数，Q值*100，取整)</li>
+<li>增益：0x0000~0x0190 （有负数，增益+最大负增益，使之变成正数后，乘10，取整）</li>
+<li>例子：<code>(C1,C2联调，第1个频点，频率设100，Q值设0.5，增益设0)</code><pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">AB</span>+<span class="hljs-variable constant_">C1</span>+<span class="hljs-number">01</span>+<span class="hljs-number">0064</span>+<span class="hljs-number">0032</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+</div></code></pre>
+</li>
+</ul>
+<h3 id="通道正反相">通道正反相</h3>
+<ul>
+<li>指令：0xBB</li>
+<li>通道：0xC1~0xC8</li>
+<li>正反相：0x00 = 正，0x01 = 反</li>
+<li>❗️❗️❗️<code>(有的版本，正反向放在通道静音，db音量指令下，具体看板子程序的版本)</code></li>
+<li>例子：<code>(C1，反相)</code><pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">BB</span>+<span class="hljs-variable constant_">C1</span>+<span class="hljs-number">01</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+</div></code></pre>
+</li>
+</ul>
+<h3 id="通道延时">通道延时</h3>
+<ul>
+<li>指令：0xCC</li>
+<li>通道：0xC1~0xC8</li>
+<li>延时：0x0000~0x03E8 (无负数，延时 * 100)</li>
+<li>例子：<code>(C1，延迟8ms)</code><pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">CC</span>+<span class="hljs-variable constant_">C1</span>+<span class="hljs-number">01</span>+<span class="hljs-number">0320</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+</div></code></pre>
+</li>
+</ul>
+<h3 id="rem-out-delay">REM OUT DELAY</h3>
+<ul>
+<li>有的有，有的没有</li>
+<li>指令：0x52,0x45,0x4D,0x53,0x45,0x54(最后一个0x54，如果有多个RE rem这个数累加，比如0x55,0x56)</li>
+<li>时间：2byte</li>
+<li>状态：1byte</li>
+<li>例子：<code>rem 延迟100ms，打开</code><pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-number">5245</span>+4D53+<span class="hljs-number">4554</span>+<span class="hljs-number">0064</span>+<span class="hljs-number">01</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+</div></code></pre>
+</li>
+</ul>
+<h3 id="通道静音db音量">通道静音，db音量</h3>
+<ul>
+<li>指令：0xDB</li>
+<li>通道：0xC1~0xC8</li>
+<li>是否静音：0x00 = 否，0x01 = 是</li>
+<li>db音量：0x0000~0x03B6 (无正数，音量绝对值 * 10)</li>
+<li>例子：<code>(C1，没有静音，db=-50)</code><pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">DB</span>+<span class="hljs-variable constant_">C1</span>+<span class="hljs-number">00</span>+01F4+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+</div></code></pre>
+</li>
+</ul>
+<hr>
+<ul>
+<li>❗️❗️❗️正反相：0x00 = 正，0x01 = 反 <code>(有的版本，正反向也接在后面，具体看板子程序的版本)</code></li>
+<li>例子：<code>(C1，没有静音，db=-50，反相)</code><pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">DB</span>+<span class="hljs-variable constant_">C1</span>+<span class="hljs-number">00</span>+01F4+<span class="hljs-number">01</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+</div></code></pre>
+</li>
+</ul>
+<h3 id="总音量">总音量</h3>
+<ul>
+<li>指令：0xEE</li>
+<li>是否静音：0x00 = 否，0x01 = 是</li>
+<li>db音量：0x0000~0x03B6 (无正数，音量绝对值 * 10)</li>
+<li>例子：<code>(总音量，静音，音量： -50)</code><pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">EE</span>+<span class="hljs-number">01</span>+01F4+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+</div></code></pre>
+</li>
+</ul>
+<hr>
+<ul>
+<li>❗️❗️❗️ 有的版本，总音量指令和单通道音量是一样的。</li>
+<li>指令：0xDB</li>
+<li>全局音量：0xC0</li>
+<li>是否静音：0x00 = 否，0x01 = 是</li>
+<li>db音量：0x0000~0x03B6 (无正数，音量绝对值 * 10)</li>
+<li>例子：<code>(全局静音，db=-50)</code><pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">DB</span>+<span class="hljs-variable constant_">C0</span>+<span class="hljs-number">00</span>+01F4+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+</div></code></pre>
+</li>
+</ul>
+<h3 id="通道分频器">通道分频器</h3>
+<ul>
+<li>
+<p>指令：0xDD高通，0xDE低通</p>
+</li>
+<li>
+<p>通道：0xC1~0xC8</p>
+</li>
+<li>
+<p>滤波类型：0x00 = bessel，0x01 = btr-w，0x02 = link-r</p>
+</li>
+<li>
+<p>slope斜率：0x00 = 6, 0x01 = 12, 0x02 = 24, 0x03 = 48</p>
+</li>
+<li>
+<p>频率：0x0014~0x4E20</p>
+</li>
+<li>
+<p>例子：<code>(C1，高通，滤波类型： bessel，slope斜率：6，频率：20)</code>
+<code>(C1，低通，滤波类型： btr-w，slope斜率：12，频率：20000)</code></p>
+<pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">DD</span>+<span class="hljs-variable constant_">C1</span>+<span class="hljs-number">00</span>+<span class="hljs-number">00</span>+<span class="hljs-number">0014</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+<span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">DE</span>+<span class="hljs-variable constant_">C1</span>+<span class="hljs-number">01</span>+<span class="hljs-number">01</span>+<span class="hljs-number">4E20</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+</div></code></pre>
+</li>
+<li>
+<p>滤波类型与指令表格说明：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">滤波类型</th>
+<th style="text-align:center">6</th>
+<th style="text-align:center">12</th>
+<th style="text-align:center">18</th>
+<th style="text-align:center">24</th>
+<th style="text-align:center">36</th>
+<th style="text-align:center">48</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">bessel</td>
+<td style="text-align:center">0x00</td>
+<td style="text-align:center">0x01</td>
+<td style="text-align:center">0x02</td>
+<td style="text-align:center">0x03</td>
+<td style="text-align:center">0x04</td>
+<td style="text-align:center">0x05</td>
+</tr>
+<tr>
+<td style="text-align:center">0x0</td>
+<td style="text-align:center">0x00,0x00</td>
+<td style="text-align:center">0x00,0x01</td>
+<td style="text-align:center">0x00,0x02</td>
+<td style="text-align:center">0x00,0x03</td>
+<td style="text-align:center">0x00,0x04</td>
+<td style="text-align:center">0x00,0x05</td>
+</tr>
+<tr>
+<td style="text-align:center">butter-w</td>
+<td style="text-align:center">0x00</td>
+<td style="text-align:center">0x01</td>
+<td style="text-align:center">0x02</td>
+<td style="text-align:center">0x03</td>
+<td style="text-align:center">0x04</td>
+<td style="text-align:center">0x05</td>
+</tr>
+<tr>
+<td style="text-align:center">0x01</td>
+<td style="text-align:center">0x01,0x00</td>
+<td style="text-align:center">0x01,0x01</td>
+<td style="text-align:center">0x01,0x02</td>
+<td style="text-align:center">0x01,0x03</td>
+<td style="text-align:center">0x01,0x04</td>
+<td style="text-align:center">0x01,0x05</td>
+</tr>
+<tr>
+<td style="text-align:center">link-r</td>
+<td style="text-align:center">0x00</td>
+<td style="text-align:center">0x01</td>
+<td style="text-align:center">---------</td>
+<td style="text-align:center">0x02</td>
+<td style="text-align:center">0x03</td>
+<td style="text-align:center">0x04</td>
+</tr>
+<tr>
+<td style="text-align:center">0x02</td>
+<td style="text-align:center">0x02,0x00</td>
+<td style="text-align:center">0x02,0x01</td>
+<td style="text-align:center">---------</td>
+<td style="text-align:center">0x02,0x02</td>
+<td style="text-align:center">0x02,0x03</td>
+<td style="text-align:center">0x02,0x04</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p>滤波类型与otc_type表格说明：</p>
+<ul>
+<li><code>这里的oct_type，仅作用在app滤波算法中，用来分类，与底层的oct_type没有关系</code></li>
+<li><code>客户端的滤波算法函数里，无滤波状态=-1，不进入滤波算法，oct-6db=0，开始进入滤波算法</code></li>
+<li><code>板子底层滤波算法函数里，无滤波状态=0(即no_filter=0)， 不进入滤波算法，oct-6db=1，开始进入滤波算法</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">滤波类型</th>
+<th style="text-align:center">6</th>
+<th style="text-align:center">12</th>
+<th style="text-align:center">18</th>
+<th style="text-align:center">24</th>
+<th style="text-align:center">36</th>
+<th style="text-align:center">48</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">bessel</td>
+<td style="text-align:center">OCT-6DB</td>
+<td style="text-align:center">BS-12DB</td>
+<td style="text-align:center">BS-18DB</td>
+<td style="text-align:center">BS-24DB</td>
+<td style="text-align:center">BS-36DB</td>
+<td style="text-align:center">BS-48DB</td>
+</tr>
+<tr>
+<td style="text-align:center">oct_type</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">6</td>
+<td style="text-align:center">7</td>
+<td style="text-align:center">8</td>
+<td style="text-align:center">9</td>
+<td style="text-align:center">10</td>
+</tr>
+<tr>
+<td style="text-align:center">butter-w</td>
+<td style="text-align:center">OCT-6DB</td>
+<td style="text-align:center">BW-12DB</td>
+<td style="text-align:center">BW-18DB</td>
+<td style="text-align:center">BW-24DB</td>
+<td style="text-align:center">BW-36DB</td>
+<td style="text-align:center">BW-48DB</td>
+</tr>
+<tr>
+<td style="text-align:center">oct_type</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">2</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center">4</td>
+<td style="text-align:center">5</td>
+</tr>
+<tr>
+<td style="text-align:center">link-r</td>
+<td style="text-align:center">OCT-6DB</td>
+<td style="text-align:center">LK-12DB</td>
+<td style="text-align:center">---------</td>
+<td style="text-align:center">LK-24DB</td>
+<td style="text-align:center">LK-36DB</td>
+<td style="text-align:center">LK-48DB</td>
+</tr>
+<tr>
+<td style="text-align:center">oct_type</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">11</td>
+<td style="text-align:center">---------</td>
+<td style="text-align:center">12</td>
+<td style="text-align:center">13</td>
+<td style="text-align:center">14</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<h3 id="单个通道直通恢复均衡eq-bypass--eq-restore">单个通道直通/恢复均衡（eq bypass / eq restore）</h3>
+<ul>
+<li><code>🔥🔥🔥注：当前选中那个通道就发哪个通道的直通，不是直通全部通道。</code></li>
+<li><code>🔥🔥🔥注：当前选中那个通道就发哪个通道的恢复，不是恢复全部通道。</code></li>
+<li>指令：0xFF</li>
+<li>通道：0xC1~0xC8</li>
+<li>直通/恢复：0x00 = 直通均衡，0x01 = 恢复均衡</li>
+<li>例子：<code>(C1，直通均衡)</code>
+<code>(C1，恢复均衡)</code><pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">FF</span>+<span class="hljs-variable constant_">C1</span>+<span class="hljs-number">00</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+<span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">FF</span>+<span class="hljs-variable constant_">C1</span>+<span class="hljs-number">01</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+</div></code></pre>
+</li>
+</ul>
+<h3 id="全通道直通恢复均衡eq-bypass-eq-restore">全通道直通/恢复均衡(eq bypass/ eq restore)</h3>
+<ul>
+<li><code>🔥🔥🔥注：直通全部通道</code></li>
+<li><code>🔥🔥🔥注：恢复全部通道。</code></li>
+<li>指令：0xFF</li>
+<li>直通/恢复：0x00 = 直通均衡，0x01 = 恢复均衡</li>
+<li>例子：<code>(直通全部均衡)</code>
+<code>(恢复全部均衡)</code><pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">FF</span>+<span class="hljs-number">00</span>+<span class="hljs-number">00</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+<span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">FF</span>+<span class="hljs-number">01</span>+<span class="hljs-number">00</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+</div></code></pre>
+</li>
+</ul>
+<h3 id="重置均衡reset">重置均衡（reset）</h3>
+<ul>
+<li><code>🔥🔥🔥注，全部通道EQ重置发通道指令为C0，其他C1-C8为单个通道重置EQ。</code></li>
+<li>指令：0xFF</li>
+<li>重置：0x02</li>
+<li>通道：0xC1~0xC8(0xC0 = 全部)</li>
+<li>例子：<code>(全部通道，重置均衡)</code><pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">FF</span>+<span class="hljs-number">02</span>+<span class="hljs-variable constant_">C0</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+</div></code></pre>
+</li>
+</ul>
+<h3 id="重置dsp">重置DSP</h3>
+<ul>
+<li>指令：0xAA,0xFF,0xFF<pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">AA</span>+<span class="hljs-variable constant_">FF</span>+<span class="hljs-variable constant_">FF</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+</div></code></pre>
+</li>
+</ul>
+<h3 id="合频">合频</h3>
+<ul>
+<li>
+<p><code>🔥🔥🔥前面接帧头AA55</code></p>
+</li>
+<li>
+<p><code>🔥🔥🔥类似 0xFF,0x0D,0x7C,0x55后面 这段 可要可不要，例如如果单次数据长度最高14字节，如果超出长度，则把后面这4字节的尾，去掉试试</code></p>
+</li>
+<li>
+<p><code>🔥🔥🔥格式：帧头AA55(2byte)+指令(3byte)+通道(1byte)+所有输入通道(8byte，如果多于8个输入通道，需要和硬件讨论这里有多少byte)+尾(4byte)</code></p>
+</li>
+<li>
+<p>2CH:</p>
+<ul>
+<li>指令：0xAA,0x83,0xF2</li>
+<li>通道：0x00，固定模式通道 = 0x00</li>
+<li>例子：<pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-title class_">AA83F</span>2+<span class="hljs-number">00</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>+<span class="hljs-title class_">FF0D</span>7C55(后面4byte可不要)
+</div></code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>4CH:</p>
+<ul>
+<li>指令：0xAA,0x83,0xF4</li>
+<li>通道：0x00，固定模式通道 = 0x00</li>
+<li>例子：<pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-title class_">AA83F</span>4+<span class="hljs-number">00</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>+<span class="hljs-title class_">FF0B</span>7C55(后面4byte可不要)
+</div></code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>6CH:</p>
+<ul>
+<li>指令：0xAA,0x83,0xF6</li>
+<li>通道：0x00，固定模式通道 = 0x00</li>
+<li>例子：<pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-title class_">AA83F</span>6+<span class="hljs-number">00</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>+<span class="hljs-title class_">FF0B</span>7C55(后面4byte可不要)
+</div></code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>SUM:</p>
+<ul>
+<li>指令：0xAA,0x83,0xFA</li>
+<li>通道：0x00，固定模式通道 = 0x00</li>
+<li>例子：<pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-title class_">AA83FA</span>+<span class="hljs-number">00</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>+<span class="hljs-title class_">FF097C</span>55
+</div></code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>COMSUMER:</p>
+<ul>
+<li>指令：0xAA,0x83,0xF0</li>
+<li>通道：0xC1~0xC8</li>
+<li>对应输入位置有输入0x01，没有输入0x00</li>
+<li>例子：<code>C1，有8个输入通道啊</code></li>
+</ul>
+<pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-title class_">AA83F</span>0+<span class="hljs-variable constant_">C1</span>+<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>+<span class="hljs-title class_">FF0F</span>7C55
+</div></code></pre>
+</li>
+<li>
+<p><code>🔥🔥🔥 12进12出pc，由于板子命令长度限制了14字节，如果合频，命令就是</code>：</p>
+<pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-title class_">AA83F</span>0+<span class="hljs-variable constant_">C1</span>+<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>,<span class="hljs-number">01</span>+<span class="hljs-title class_">FF0F</span>7C55
+</div></code></pre>
+</li>
+<li>
+<p><code>上面数据，即使去掉头AA55，也超出了14字节。</code></p>
+</li>
+<li>
+<p><code>🔥🔥🔥 所以新增以bit形式来发送！</code></p>
+<ul>
+<li>
+<p>例子： <code>输出ch1上，选择ch3，ch11，ch12:</code></p>
+<pre class="hljs"><code><div>                  高<span class="hljs-number">8</span>位                             低<span class="hljs-number">8</span>位
+ <span class="hljs-number">0</span>    <span class="hljs-number">0</span>    <span class="hljs-number">0</span>    <span class="hljs-number">0</span>    <span class="hljs-number">0</span>    <span class="hljs-number">1</span>    <span class="hljs-number">0</span>    <span class="hljs-number">0</span>   ｜   <span class="hljs-number">0</span>     <span class="hljs-number">0</span>     <span class="hljs-number">0</span>     <span class="hljs-number">0</span>     <span class="hljs-number">1</span>     <span class="hljs-number">1</span>     <span class="hljs-number">0</span>     <span class="hljs-number">0</span>    = <span class="hljs-number">0x04</span>, <span class="hljs-number">0xC</span>
+ ch8  ch7 ch6  ch5  ch4  ch3  ch2  ch1      ch16  ch15  ch14  ch13  ch12  ch11  ch10  ch9
+</div></code></pre>
+<pre class="hljs"><code><div>  <span class="hljs-title class_">AA55</span>+<span class="hljs-title class_">AA83F</span>0+<span class="hljs-variable constant_">C1</span>+<span class="hljs-number">04</span>,0C,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>+<span class="hljs-title class_">FF0F</span>7C55
+</div></code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="噪门控制">噪门控制</h3>
+<ul>
+<li><code>🔥🔥🔥APP UI无此选项可以不加</code></li>
+<li>指令：0xCC,0xCC</li>
+<li>噪门等级：0x00 = 关闭，0x01 = 1级，0x08 = 8级
+<ul>
+<li>例子：<code>level 8 噪门控制</code></li>
+</ul>
+<pre class="hljs"><code><div><span class="hljs-title class_">AA55</span>+<span class="hljs-variable constant_">CCCC</span>+<span class="hljs-number">08</span>+<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>,<span class="hljs-number">00</span>
+</div></code></pre>
+</li>
+</ul>
+<h3 id="限幅器">限幅器</h3>
+<ul>
+<li><code>🔥🔥🔥APP UI无此选项可以不加</code></li>
+<li>指令：0xFA</li>
+<li>通道：0xC1~0xC8</li>
+<li>电平：0x00~0x30</li>
+<li>响应速度：0x05~0x17</li>
+<li>释放时间：(2,4,6,8,16,32)</li>
+</ul>
+<h3 id="连接验证">连接验证</h3>
+<ul>
+<li><code>🔥🔥🔥APP先不加</code><pre class="hljs"><code><div><span class="hljs-number">0x47</span>,<span class="hljs-number">0x45</span>,<span class="hljs-number">0x54</span>,<span class="hljs-number">0x44</span>,<span class="hljs-number">0x53</span>,<span class="hljs-number">0x50</span>,<span class="hljs-number">0x54</span>,<span class="hljs-number">0x59</span>,<span class="hljs-number">0x50</span>,<span class="hljs-number">0x45</span>
+</div></code></pre>
+</li>
+</ul>
+<h3 id="获取设备数据">获取设备数据</h3>
+<pre class="hljs"><code><div><span class="hljs-number">0x47</span>,<span class="hljs-number">0x45</span>,<span class="hljs-number">0x54</span>,<span class="hljs-number">0x44</span>,<span class="hljs-number">0x53</span>,<span class="hljs-number">0x50</span>,<span class="hljs-number">0x54</span>,<span class="hljs-number">0x59</span>,<span class="hljs-number">0x55</span>,<span class="hljs-number">0x55</span>
+</div></code></pre>
+<h3 id="发送获取设备数据包后-的确认指令">发送获取设备数据包后 的确认指令</h3>
+<pre class="hljs"><code><div><span class="hljs-number">0x47</span>,<span class="hljs-number">0x45</span>,<span class="hljs-number">0x54</span>,<span class="hljs-number">0x44</span>,<span class="hljs-number">0x53</span>,<span class="hljs-number">0x50</span>,<span class="hljs-number">0x54</span>,<span class="hljs-number">0x59</span>,<span class="hljs-number">0x55</span>,<span class="hljs-number">0x55</span>,<span class="hljs-number">0x00</span>~<span class="hljs-number">0x01</span>(分段),<span class="hljs-number">0x1</span>~<span class="hljs-number">0xff</span>(次数)
+</div></code></pre>
+<h3 id="保存到设备">保存到设备</h3>
+<ul>
+<li><code>🔥🔥🔥APP发指令时加AA,55即可，保存参数到设备指令，APP上调好的参数，可以通过次指令保存到MCU的相应位置</code></li>
+<li><code>🔥🔥🔥总共6档，默认D0就是即时保存，D1~D5,保存到指定MCU上</code><pre class="hljs"><code><div><span class="hljs-number">0xFF</span> <span class="hljs-number">0xCC</span> <span class="hljs-number">0x00</span>-(<span class="hljs-variable constant_">D1</span>~<span class="hljs-variable constant_">D5</span>)
+</div></code></pre>
+</li>
+<li>指令: 0xFF, 0xCC</li>
+<li>例子：保存当前的数据，到第一个MCU<pre class="hljs"><code><div><span class="hljs-variable constant_">FFCC</span>+<span class="hljs-variable constant_">D1</span>
+</div></code></pre>
+</li>
+</ul>
+<h3 id="获取当前设备是使用哪个mcu的数据设备当前数据的位置">获取当前设备是使用哪个MCU的数据(设备当前数据的位置)</h3>
+<ul>
+<li><code>🔥🔥🔥0就是即时保存，1-5就是MCU1-MCU5</code></li>
+<li>指令: 0x46, 0x13 + (位置)</li>
+</ul>
+<h3 id="选择rcaanalog--toslink--dbdigital-bluetooth">选择RCA(analog) | Toslink | DB(digital bluetooth)</h3>
+<ul>
+<li>指令：0xAA，0x82</li>
+<li>选择RAC：0xC1</li>
+<li>选择Toslink: 0xC2</li>
+<li>选择DB：0xC3</li>
+<li>例子：切换到蓝牙模式<pre class="hljs"><code><div><span class="hljs-number">0xAA</span>,<span class="hljs-number">0x82</span>,<span class="hljs-number">0xC3</span>(如果某个版本有固定长度，后面补<span class="hljs-number">0</span>)
+</div></code></pre>
+</li>
+</ul>
+<h3 id="修改db模式下的合频">修改DB模式下的合频</h3>
+<ul>
+<li>指令：0xAA,0x83,0xFB</li>
+<li>通道：0xC1~0xC8</li>
+<li>L未选中/选中：0x00/0x01</li>
+<li>R未选中/选中：0x00/0x01</li>
+<li>一个未选中/选中1个/选中2个：0x00/0x01/0x02</li>
+<li>L在界面显示的位置：0x01/0x02</li>
+<li>R在界面显示的位置：0x01/0x02</li>
+<li><code>蓝牙通道下，输入选择指令，类似模拟通道的输入选择，只是只有两个通道，故在UI上显示L或者R。</code></li>
+</ul>
+<h3 id="修改toslink模式下的合频">修改Toslink模式下的合频</h3>
+<ul>
+<li>指令：0xAA,0x83,0xFC</li>
+<li>通道：0xC1~0xC8</li>
+<li>L未选中/选中：0x00/0x01</li>
+<li>R未选中/选中：0x00/0x01</li>
+<li>一个未选中/选中1个/选中2个：0x00/0x01/0x02</li>
+<li>L在界面显示的位置：0x01/0x02</li>
+<li>R在界面显示的位置：0x01/0x02</li>
+<li><code>Toslink通道下，输入选择指令，类似模拟通道的输入选择，只是只有两个通道，故在UI上显示L或者R。</code></li>
+</ul>
+
+</body>
+</html>
