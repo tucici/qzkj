@@ -1,0 +1,485 @@
+# 秦智科技内部无线传输通用基准协议规范
+
+- **文档版本：** V1.0（草案）
+- **适用范围：** 公司内部无线设备的数据通信基准协议，不同产品，不同无线传输方式，都基于此基准协议
+- **承载方式：** `经典蓝牙`、`低功耗蓝牙（BLE）`、`HID` 等
+- **字节序：** 所有多字节整数统一采用小端序`（Little-endian）`
+- **校验算法：** `CRC-16/MODBUS`计算，小端顺序
+- **建议 CRC 覆盖范围：** 从 `ROUTE` 字段第一个字节开始，一直到 `DATA` 最后一个字节（即不包含帧头 `0xAA` 与 `CHECKSUM` 字段本身）
+
+---
+
+---
+
+## 1. 目的与范围
+
+- 本协议定义公司内部通用的应用层帧格式，用于承载命令、响应、数据、确认及控制消息。
+- 本协议不替代经典蓝牙、BLE GATT 或 HID 的底层规范。
+- 每种承载方式仍须定义自身的帧边界、最大长度、分段和可靠性规则。
+- 本协议支持`单命令帧`与`多命令复合帧`：
+  - `CMD_COUNT = 1`：本帧只包含一个 CMD，与单命令帧兼容；
+  - `CMD_COUNT > 1`：本帧为复合帧，`CMD_COUNT` 之后连续排列多个 `(CMD + DATA_LENGTH + DATA)` 三元组，所有 CMD 共用同一 `TYPE` 与 `ROUTE`，整体由一个 `CHECKSUM` 保护。
+
+---
+
+## 2. 帧格式
+
+- ### 2.1 字段定义
+
+  | 字段        |   长度 | 说明                                                         |
+  | ----------- | -----: | ------------------------------------------------------------ |
+  | HEADER      | 1 字节 | 固定 `0xAA`                                                  |
+  | ROUTE       | 1 字节 | `DSP`,`MCU`,`BT`,`HID host`,`应用程序`，具体视不同产品线而定 |
+  | TYPE        | 1 字节 | `系统命令`,`控制命令`，`大数据命令`                          |
+  | CMD_COUNT   | 1 字节 | 命令帧数量                                                   |
+  | CMD         | 1 字节 | 命令编号                                                     |
+  | DATA_LENGTH | 2 字节 | DATA 字段长度，不含 CRC，`小端序（Little-endian）`           |
+  | DATA        | N 字节 | 负载数据                                                     |
+  | CHECKSUM    | 2 字节 | CRC16 校验值 `小端序（Little-endian）`                       |
+
+
+    <table border="1" cellspacing="0" cellpadding="8">
+      <tr>
+         <td rowspan="3">HEADER</td>
+         <td rowspan="3">ROUTE</td>
+         <td rowspan="3">TYPE</td>
+         <td rowspan="3">CMD_COUNT</td>
+         <td>CMD</td>
+         <td>DATA_LENGTH</td>
+         <td>DATA</td>
+         <td rowspan="3">CHECKSUM</td>
+      </tr>
+      <tr>
+         <td>CMD</td>
+         <td>DATA_LENGTH</td>
+         <td>DATA</td>
+      </tr>
+      <tr>
+         <td>CMD</td>
+         <td>DATA_LENGTH</td>
+         <td>DATA</td>
+      </tr>
+    </table>
+
+---
+
+## 3. 字段规则
+
+### 3.1 HEADER
+
+固定为 `0xAA`，用于定位候选帧起点。接收端仍须检查长度和 CRC。若承载方式提供消息边界，也不得因此跳过协议帧的完整性检查。
+
+---
+
+### 3.2 ROUTE
+
+用于区分消息来源，`示例，非必需，不同的产品可以自定义`。
+
+此字段理论类型范围`0x01`~`0xFF`，给后面不同设备端预留了位置，可根据不同产品线细分。
+
+| 值     | 名称       | 说明           | 示例              | 场景                                |
+| ------ | ---------- | -------------- | ----------------- | ----------------------------------- |
+| 0x00   | UNKNOWN    | 未指定         | AA 00 xx xx xx... | 未知设备发送了一条数据给接收端      |
+| 0x01   | APP        | 手机或桌面应用 | AA 01 xx xx xx... | 应用端发送了一条数据给接收端        |
+| 0x02   | MCU        | 主控 MCU       | AA 02 xx xx xx... | 蓝牙透传了某个MCU的一条数据给应用端 |
+| 0x03   | DSP        | DSP 处理器     | AA 03 xx xx xx... | 蓝牙透传了某个DSP的一条数据给应用端 |
+| 0x04   | BLE_MODULE | BLE 模块       | AA 04 xx xx xx... | BLE发送了一条数据给应用端           |
+| 0x05   | BT_MODULE  | 经典蓝牙模块   | AA 05 xx xx xx... | 经典蓝牙发送了一条数据给应用端      |
+| 0x06   | HID_HOST   | HID 主机       | AA 06 xx xx xx... | HID 主机发送了一条数据给应用端      |
+| 0x07   | HID_DEVICE | HID 设备       | AA 07 xx xx xx... | HID 设备发送了一条数据给应用端      |
+| 0x0... | 预留位置   | 协议维护使用   | AA xx xx xx xx... | 来自预留位置的一条数据              |
+
+---
+
+### 3.3 TYPE
+
+区分命令的类型，与`CMD`配合，预留业务上的冗余空间。
+
+此字段理论类型范围`0x01`~`0xFF`，给后面类型预留了位置，可根据不同产品线细分:
+
+🔥🔥🔥 建议遵守`0x01`=`大数据命令`，`0x02`=`系统命令`
+
+| TYPE     | 类型       | 说明                                                                  |
+| ------ | ---------- | --------------------------------------------------------------------- |
+| 0x01   | 大数据命令 | 大数据传输                                                            |
+| 0x02   | 系统命令   | 心跳,ping,协议版本查询                                                |
+| 0x03   | 控制命令   | 预留给具体业务的指令                                                  |
+| 0xFE   | 透传命令   | 测试阶段使用，设备收到该类型的命令，原数据返回，相当于带详细数据的ACK |
+| 0xFF   | ACK        | 数据帧确认ACK                                                         |
+| 0x0... | 预留类型   | 预留类型                                                              |
+
+- **大数据命令:** `TYPE`=`0x01`
+  发送大数据
+
+- **系统命令:** `TYPE`=`0x02`
+   <table style="border-collapse: collapse; width: 100%;" border="1" cellpadding="6" cellspacing="0">
+  <thead>
+    <tr>
+      <th>TYPE</th>
+      <th>CMD</th>
+      <th>名称</th>
+      <th>说明</th>
+      <th>示例</th>
+      <th>场景</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="9">0x02</td>
+      <td>0x00</td>
+      <td>CMD_HEARTBEAT</td>
+      <td>心跳包</td>
+      <td><code>AA 04 02 01 00 xx xx</code></td>
+      <td>BT 向应用端发送心跳包</td>
+    </tr>
+    <tr>
+      <td>0x01</td>
+      <td>CMD_PING</td>
+      <td>Ping 测试</td>
+      <td><code>AA 01 02 01 01 xx xx</code></td>
+      <td>应用端向 BT 发送 Ping</td>
+    </tr>
+    <tr>
+      <td rowspan="2">0x02</td>
+      <td rowspan="2">CMD_FIRMWARE_INFO</td>
+      <td rowspan="2">固件信息查询</td>
+      <td><code>AA 01 02 01 02 xx xx</code></td>
+      <td>应用端向 BT 查询固件信息</td>
+    </tr>
+    <tr>
+      <td><code>AA 04 02 01 02 xx xx</code></td>
+      <td>BT 向应用端返回固件信息</td>
+    </tr>
+    <tr>
+      <td rowspan="2">0x03</td>
+      <td rowspan="2">CMD_PRODUCT_INFO</td>
+      <td rowspan="2">产品信息查询</td>
+      <td><code>AA 01 02 01 03 xx xx</code></td>
+      <td>应用端向 BT 查询产品信息</td>
+    </tr>
+    <tr>
+      <td><code>AA 04 02 01 03 xx xx</code></td>
+      <td>BT 向应用端返回产品信息</td>
+    </tr>
+    <tr>
+      <td rowspan="2">0x04</td>
+      <td rowspan="2">CMD_RESET</td>
+      <td rowspan="2">系统复位</td>
+      <td><code>AA 01 02 01 04 xx xx</code></td>
+      <td>应用端向 BT 发送复位指令</td>
+    </tr>
+    <tr>
+      <td><code>AA 04 02 01 04 xx xx</code></td>
+      <td>BT 向应用端回复复位状态</td>
+    </tr>
+    <tr>
+      <td>0x0...</td>
+      <td>预留位置</td>
+      <td>预留功能</td>
+      <td><code>xx xx xx xx xx xx</code></td>
+      <td>预留功能</td>
+    </tr>
+  </tbody>
+  </table>
+- **控制命令:** `TYPE`=`0x03`
+  所有具体业务的指令，都归属该类型的命令下，
+- **透传命令:** `TYPE`=`0xFE`
+  | HEADER | ROUTE | 0xFE |  CMD_COUNT | CMD | DATA_LENGTH | DATA | CHECKSUM |
+- **ACK命令:** `TYPE`=`0xFF`
+  | HEADER | ROUTE | 0xFF |  CMD_1 | CMD_2 | CMD_3 | CMD_n |
+- **其他预留命令:** `TYPE`=`0x0..`
+
+---
+
+### 3.4 CMD_COUNT
+  元组的个数，即`CMD`+`DATA_LENGTH`+`DATA`的个数
+
+---
+
+### 3.5 CMD
+ 业务命令
+
+---
+
+### 3.6 DATA_LENGTH
+ `DATA`有多少个字节
+
+---
+
+### 3.7 CHECKSUM
+采用`CRC-16/MODBUS`计算校验码
+| 算法名称             | CRC-16/MODBUS                 |
+| -------------------- | ----------------------------- |
+| Width                | 16 bit                        |
+| Polynomial（多项式） | 0x8005（反射实现使用 0xA001） |
+| Initial Value        | 0xFFFF                        |
+| RefIn                | true                          |
+| RefOut               | true                          |
+| XorOut               | 0x0000                        |
+| CRC 结果长度         | 2 字节                        |
+| CRC 传输顺序         | 小端，低字节在前              |
+
+- 校验范围
+  示例: 完整的产品信息查询指令
+  ```
+  CHECKSUM = ROUTE + TYPE + CMD_COUNT + CMD + DATA_LENGTH + DATA
+  ```
+- 示例: 完整的产品信息查询指令`AA 01 02 01 03 00 CRC_LOW CRC_HIGH`
+  ```text
+    AA     01      02        01           03             00        CRC_LOW   CRC_HIGH
+    │      │       │         │             │              │           │         │
+    │      │       │         │             │              │           │         │
+   帧头  ROUTE  系统命令  DATA_COUNT  CMD_PRODUCT_INFO  DATA_LENGTH     │         │
+           │                                               │          │         │
+           │                                               │          │         │
+           └───────────────────────────────────────────────┘          └─────────┘
+                                │                                           │
+                            进行CRC16                                        │
+                                │                                           │
+                                └───────────────────────────────────────────┘
+  ``` 
+
+- 实现方法:
+  ```c
+   #include <stdint.h>
+   #include <stddef.h>
+
+   void crc16_modbus(const uint8_t *data, uint16_t len, uint8_t crc_bytes[2])
+  {
+      uint16_t crc = 0xFFFF;
+
+      for (uint16_t i = 0; i < len; i++)
+      {
+          crc ^= data[i];
+
+          for (uint8_t j = 0; j < 8; j++)
+          {
+              if (crc & 0x0001)
+              {
+                  crc = (crc >> 1) ^ 0xA001;
+              }
+              else
+              {
+                  crc >>= 1;
+              }
+          }
+      }
+
+      // 直接按照小端顺序输出
+      crc_bytes[0] = (uint8_t)(crc & 0xFF);        // CRC低字节
+      crc_bytes[1] = (uint8_t)((crc >> 8) & 0xFF); // CRC高字节
+  }
+  ```  
+
+- 调用方式:
+  ```c
+     uint8_t data[] = {0xAA, 0x05, 0x02, 0x01, 0x03, 0x00};
+
+     uint8_t check_sum[2];
+
+     crc16_modbus(data, sizeof(data), check_sum);
+
+     // 直接追加到通信帧
+     data[6] = check_sum[0];
+     data[7] = check_sum[1];
+  ```        
+
+---
+
+
+## 4. 设备返回规则
+无线通信协议中，ACK、设备应答（Response）和主动上传（Event/Report）是三种不同的通信行为
+<table style="width: 100%; border-collapse: collapse; text-align: center; white-space: nowrap;" border="1" cellpadding="8" cellspacing="0">
+  <thead>
+    <tr>
+      <th>类型</th>
+      <th>触发方式</th>
+      <th>是否对应请求</th>
+      <th>是否表示处理完成</th>
+      <th>是否需要携带 CMD</th>
+      <th>主要用途</th>
+      <th>是否主动发起</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ACK</td>
+      <td>收到数据后立即触发</td>
+      <td>是</td>
+      <td>不表示</td>
+      <td>需要</td>
+      <td>数据帧接收确认</td>
+      <td>否，响应接收行为</td>
+    </tr>
+    <tr>
+      <td>Response（设备应答）</td>
+      <td>收到数据处理后触发</td>
+      <td>是</td>
+      <td>表示</td>
+      <td>需要</td>
+      <td>返回执行结果</td>
+      <td>否，响应命令</td>
+    </tr>
+    <tr>
+      <td>Event（主动上传）</td>
+      <td>设备自身事件触发</td>
+      <td>不一定</td>
+      <td>不适用</td>
+      <td>需要</td>
+      <td>上报状态或事件</td>
+      <td>是</td>
+    </tr>
+  </tbody>
+</table>
+
+ ### 4.1 ACK规则
+  - 只表示已经收到数据帧。
+  - 不代表数据帧校验成功。
+  - 不代表命令执行成功。
+  - 第`3`字节`TYPE`=`0xFF`，则固定代表ACK消息
+  - 固定帧格式
+    <table style="width: 100%; border-collapse: collapse; text-align: center; white-space: nowrap;" border="1" cellpadding="8" cellspacing="0">
+    <thead>
+    <tr>
+      <th>HEADER</th>
+      <th>ROUTE</th>
+      <th>0xFF</th>
+      <th>CMD_1</th>
+      <th>CMD_2</th>
+      <th>CMD_3</th>
+      <th>CMD_n</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <td>帧头</td>
+      <td>消息来源</td>
+      <td>ACK 固定标识</td>
+      <td>收到的数据帧里面的第 1 个 CMD</td>
+      <td>收到的数据帧里面的第 2 个 CMD</td>
+      <td>收到的数据帧里面的第 3 个 CMD</td>
+      <td>收到的数据帧里面的第 n 个 CMD</td>
+    </tr>
+    </tbody>
+    </table>
+
+  ---
+  
+ ### 4.2 Response规则
+  - 已收到数据。
+  - 已校验成功。
+  - 已处理完毕。
+    | CODE   | NAME | 说明 |
+    | ------ | ---- | ---- |
+    | `0x00` | SUCCESS | 成功 |
+    | `0x01` | INVALID_VERSION | 不支持的协议版本 |
+    | `0x02` | INVALID_PRODUCT | 产品类型不匹配 |
+    | `0x03` | INVALID_TYPE | 不支持的消息类型 |
+    | `0x04` | INVALID_ROUTE | 路由无效 |
+    | `0x05` | INVALID_CMD | 不支持的命令 |
+    | `0x06` | INVALID_LENGTH | 数据长度非法 |
+    | `0x07` | INVALID_PARAMETER | 参数无效 |
+    | `0x08` | CRC_ERROR | CRC 校验失败 |
+    | `0x09` | BUSY | 设备忙 |
+    | `0x0A` | TIMEOUT | 操作超时 |
+    | `0x0B` | NOT_SUPPORTED | 功能不支持 |
+    | `0x0C` | INTERNAL_ERROR | 内部错误 |
+    | `0x..` | INTERNAL_OTHER | 预留的CODE |
+
+  - `Response`格式:
+     | HEADER | ROUTE  | TYPE |  CMD_COUNT |   CMD |  DATA_LENGTH | CODE | CHECKSUM(可带可不带) |
+     | ------ | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+ ---
+
+ ### 4.3 Event规则
+  - 上报状态或事件，常见场景:
+   - 蓝牙连接状态变化
+   - 设备开机或关机
+   - 音量被物理旋钮改变
+   - 过温、过流等异常
+   - 血氧心跳监测变化
+  - `Event`格式: 
+    | HEADER | ROUTE  | TYPE |  CMD_COUNT |   CMD |  DATA_LENGTH | CODE | CHECKSUM |
+    | ------ | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+
+---
+
+
+## 5. 大数据传输建议
+
+建议定义以下传输子命令：
+
+- `TRANSFER_START`：声明传输 ID、数据类型、总长度及选项；
+- `DATA`：携带传输 ID、偏移量、分块长度和数据；
+- `ACK`：确认已接收范围或下一期待偏移量；
+- `TRANSFER_FINISH`：声明传输结束，并携带完整数据 CRC32 或其他完整性校验；
+- `TRANSFER_CANCEL`：取消传输；
+- `TRANSFER_STATUS`：查询传输状态。
+
+必须定义 ACK 的语义，例如“已接收至缓冲区”“已写入存储”或“已完成校验”。重复数据块应具备幂等处理规则。固件升级应验证签名或采用等效可信机制；CRC32 不能代替数字签名。
+---
+
+## 6. 接收端解析流程
+
+1. 按对应传输绑定接收数据。
+2. 定位帧头 `0xAA`。
+3. 读取固定头部并解析 DATA_LENGTH。
+4. 检查 DATA_LENGTH 是否在实现允许范围内。
+5. 收集完整 DATA 和 2 字节 CRC16。
+6. 按规定算法计算 CRC16 并比较。
+7. CRC 正确后，检查协议版本、产品类型、TYPE、ROUTE 和 CMD。
+8. 按消息类型及命令定义解析 DATA。
+9. 对不支持的版本、类型、路由或命令按统一错误规则处理。
+
+对连续字节流，应定义 CRC 错误或长度非法时的重同步策略，避免解析器永久失步。
+---
+
+
+
+## 7. 安全要求
+
+- CRC16 只用于检测意外传输错误，不可用于验证发送方身份。
+- 涉及设备控制、敏感数据或固件升级的命令，应按风险要求使用配对、加密、身份认证和授权。
+- 固件升级必须进行签名验证或采用等效可信完整性机制。
+- 接收端必须校验 DATA_LENGTH、偏移量、总长度、命令参数和数据块边界。
+- CRC 正确不代表消息来自可信设备。
+---
+
+## 8. 兼容性与扩展
+
+- 已发布字段的含义不得在同一协议版本中重新解释。
+- 新增 TYPE、ROUTE、CMD 或错误码应由协议维护者统一分配。
+- 未知保留值应安全处理，不得导致设备崩溃。
+- 修改固定帧结构、字段长度或已有字段语义时，应提升协议版本并定义兼容策略。
+- 兼容性扩展优先放入 DATA，并通过能力协商确认支持情况。
+---
+
+## 9. V1.0 发布前必须确定的事项
+
+1. CRC16 的具体算法参数、计算范围和字节序；
+2. ProtocolVersion 的编码规则和兼容策略；
+3. ProductTYPE、ProductSerial、TYPE、ROUTE、CMD 的编号注册规则；
+4. DATA_LENGTH 的产品级最大值；
+5. ROUTE 表示来源还是目的地；
+6. COMMAND 与 RESPONSE 的关联机制（当前帧头没有独立 Sequence 字段）；
+7. ACK 的确认对象和确认语义；
+8. 经典蓝牙、BLE GATT、HID 的承载与分段规则；
+9. 超时、重试、重复帧、断连和恢复策略；
+10. 安全认证、授权和固件升级安全要求。
+---
+
+## 附录 A：
+---
+
+## 附录 B：实现检查清单
+- [ ] 多字节整数采用统一字节序
+- [ ] CRC16 算法参数、覆盖范围和字节序已统一
+- [ ] 接收端限制最大 DATA_LENGTH 并防止缓冲区溢出
+- [ ] 请求与响应的关联机制已定义
+- [ ] ACK 语义、超时和重试规则已定义
+- [ ] BLE、经典蓝牙、HID 均有对应传输绑定规则
+- [ ] 大数据传输支持分块、偏移、校验和取消
+- [ ] 未知版本、TYPE、ROUTE 和 CMD 能安全处理
+- [ ] 固件升级具备签名验证或等效安全机制
+---
+
